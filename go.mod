@@ -27,9 +27,9 @@ require (
 	github.com/Azure/azure-amqp-common-go/v3 v3.1.0
 	github.com/Azure/azure-pipeline-go v0.2.3
 	github.com/Azure/azure-sdk-for-go v54.3.0+incompatible
-	github.com/Azure/azure-service-bus-go v0.10.14
+	github.com/Azure/azure-service-bus-go v0.10.16
 	github.com/Azure/azure-storage-blob-go v0.14.0
-	github.com/Azure/go-amqp v0.13.10
+	github.com/Azure/go-amqp v0.13.11
 	github.com/Azure/go-autorest/autorest v0.11.19
 	github.com/Azure/go-autorest/autorest/adal v0.9.14
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.8
