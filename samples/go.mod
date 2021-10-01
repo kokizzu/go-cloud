@@ -34,7 +34,7 @@ require (
 	gocloud.dev/docstore/mongodocstore v0.23.0
 	gocloud.dev/pubsub/kafkapubsub v0.23.0
 	gocloud.dev/pubsub/natspubsub v0.23.0
-	gocloud.dev/pubsub/rabbitpubsub v0.23.0
+	gocloud.dev/pubsub/rabbitpubsub v0.24.0
 	gocloud.dev/secrets/hashivault v0.23.0
 	google.golang.org/genproto v0.0.0-20210728212813-7823e685a01f
 	gopkg.in/pipe.v2 v2.0.0-20140414041502-3c2ca4d52544
