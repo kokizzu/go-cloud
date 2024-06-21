@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -43,11 +43,11 @@ func TestOrderForm(t *testing.T) {
 	if res.StatusCode != 200 {
 		t.Fatalf("got %d, want 200", res.StatusCode)
 	}
-	wantb, err := ioutil.ReadFile("order-form.htmlt")
+	wantb, err := os.ReadFile("order-form.htmlt")
 	if err != nil {
 		t.Fatal(err)
 	}
-	gotb, err := ioutil.ReadAll(res.Body)
+	gotb, err := io.ReadAll(res.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +80,7 @@ func TestCreateOrder(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer r.Close()
-	gotb, err := ioutil.ReadAll(r)
+	gotb, err := io.ReadAll(r)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,8 +104,10 @@ func TestListOrders(t *testing.T) {
 		t.Fatal(err)
 	}
 	orders := []*Order{
-		{ID: "a", Email: "pat@example.com", InImage: "a-in", OutImage: "a-out",
-			CreateTime: time.Now().Add(-18 * time.Second), FinishTime: time.Now()},
+		{
+			ID: "a", Email: "pat@example.com", InImage: "a-in", OutImage: "a-out",
+			CreateTime: time.Now().Add(-18 * time.Second), FinishTime: time.Now(),
+		},
 		{ID: "b", Email: "mel@example.com", InImage: "b-in", CreateTime: time.Now()},
 	}
 	actions := f.coll.Actions()
@@ -126,7 +128,7 @@ func TestListOrders(t *testing.T) {
 	if res.StatusCode != 200 {
 		t.Fatalf("got %d, want 200", res.StatusCode)
 	}
-	gotb, err := ioutil.ReadAll(res.Body)
+	gotb, err := io.ReadAll(res.Body)
 	if err != nil {
 		t.Fatal(err)
 	}

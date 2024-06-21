@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"os/exec"
@@ -47,15 +46,9 @@ func TestOpen(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	dir, err := ioutil.TempDir("", "gocloud_postgres_test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if err := os.RemoveAll(dir); err != nil {
-			t.Errorf("Cleaning up: %v", err)
-		}
-	}()
+
+	dir := t.TempDir()
+
 	dataDir := filepath.Join(dir, "data")
 	initdbCmd := exec.Command(initdbPath, "-U", currUser.Username, "-D", dataDir)
 	initdbOutput := new(bytes.Buffer)
@@ -72,12 +65,12 @@ func TestOpen(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.Mkdir(socketDir, 0777); err != nil {
+	if err := os.Mkdir(socketDir, 0o777); err != nil {
 		t.Fatal(err)
 	}
 	confData := new(bytes.Buffer)
 	fmt.Fprintf(confData, "unix_socket_directories = '%s'\n", socketDir)
-	err = ioutil.WriteFile(filepath.Join(dataDir, "postgresql.conf"), confData.Bytes(), 0666)
+	err = os.WriteFile(filepath.Join(dataDir, "postgresql.conf"), confData.Bytes(), 0o666)
 	if err != nil {
 		t.Fatal(err)
 	}

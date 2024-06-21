@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -179,7 +178,7 @@ func BenchmarkStackdriverLog(b *testing.B) {
 	buf.Reset()
 	b.ResetTimer()
 
-	l = NewStackdriverLogger(ioutil.Discard, func(error) {})
+	l = NewStackdriverLogger(io.Discard, func(error) {})
 	for i := 0; i < b.N; i++ {
 		l.Log(ent)
 	}
@@ -187,6 +186,8 @@ func BenchmarkStackdriverLog(b *testing.B) {
 
 func BenchmarkE2E(b *testing.B) {
 	run := func(b *testing.B, handler http.Handler) {
+		b.Helper()
+
 		s := httptest.NewServer(handler)
 		defer s.Close()
 		b.ReportAllocs()
@@ -195,7 +196,7 @@ func BenchmarkE2E(b *testing.B) {
 			if err != nil {
 				b.Fatal(err)
 			}
-			io.Copy(ioutil.Discard, resp.Body)
+			io.Copy(io.Discard, resp.Body)
 			resp.Body.Close()
 		}
 	}
@@ -203,7 +204,7 @@ func BenchmarkE2E(b *testing.B) {
 		run(b, http.HandlerFunc(benchHandler))
 	})
 	b.Run("WithLog", func(b *testing.B) {
-		l := NewStackdriverLogger(ioutil.Discard, func(error) {})
+		l := NewStackdriverLogger(io.Discard, func(error) {})
 		run(b, NewHandler(l, http.HandlerFunc(benchHandler)))
 	})
 }

@@ -74,6 +74,7 @@ import (
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/credentials/oauth"
 	"google.golang.org/grpc/status"
 )
@@ -299,7 +300,6 @@ func Dial(ctx context.Context, ts gcp.TokenSource) (*grpc.ClientConn, func(), er
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1024*11)),
 		useragent.GRPCDialOption("pubsub"),
 	)
-
 	if err != nil {
 		return nil, nil, err
 	}
@@ -308,7 +308,9 @@ func Dial(ctx context.Context, ts gcp.TokenSource) (*grpc.ClientConn, func(), er
 
 // dialEmulator opens a gRPC connection to the GCP Pub Sub API.
 func dialEmulator(ctx context.Context, e string) (*grpc.ClientConn, error) {
-	conn, err := grpc.DialContext(ctx, e, grpc.WithInsecure(), useragent.GRPCDialOption("pubsub"))
+	conn, err := grpc.DialContext(ctx, e,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		useragent.GRPCDialOption("pubsub"))
 	if err != nil {
 		return nil, err
 	}
@@ -644,6 +646,7 @@ func queryParameterInt(value []string) (int, error) {
 
 	return strconv.Atoi(value[0])
 }
+
 func queryParameterBool(value []string) (bool, error) {
 	if len(value) > 1 {
 		return false, fmt.Errorf("expected only one parameter value, got: %v", len(value))

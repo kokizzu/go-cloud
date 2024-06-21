@@ -369,8 +369,10 @@ func TestParsedTag(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []*Field{
-		{Name: "name", NameFromTag: true, Type: intType,
-			Index: []int{0}, ParsedTag: []string{"omitempty"}},
+		{
+			Name: "name", NameFromTag: true, Type: intType,
+			Index: []int{0}, ParsedTag: []string{"omitempty"},
+		},
 	}
 	if msg, ok := compareFields(got, want); !ok {
 		t.Error(msg)
@@ -436,6 +438,8 @@ func setFields(fields []Field, dst, src interface{}) {
 }
 
 func jsonRoundTrip(t *testing.T, in, out interface{}) {
+	t.Helper()
+
 	bytes, err := json.Marshal(in)
 	if err != nil {
 		t.Fatal(err)

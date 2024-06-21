@@ -62,21 +62,29 @@ type harness struct {
 }
 
 func newHarness(ctx context.Context, t *testing.T) (drivertest.Harness, error) {
+	t.Helper()
+
 	sess, rt, done, _ := setup.NewAWSSession(ctx, t, region)
 	return &harness{useV2: false, session: sess, opts: nil, rt: rt, closer: done}, nil
 }
 
 func newHarnessUsingLegacyList(ctx context.Context, t *testing.T) (drivertest.Harness, error) {
+	t.Helper()
+
 	sess, rt, done, _ := setup.NewAWSSession(ctx, t, region)
 	return &harness{useV2: false, session: sess, opts: &Options{UseLegacyList: true}, rt: rt, closer: done}, nil
 }
 
 func newHarnessV2(ctx context.Context, t *testing.T) (drivertest.Harness, error) {
+	t.Helper()
+
 	cfg, rt, done, _ := setup.NewAWSv2Config(ctx, t, region)
 	return &harness{useV2: true, clientV2: s3v2.NewFromConfig(cfg), opts: nil, rt: rt, closer: done}, nil
 }
 
 func newHarnessUsingLegacyListV2(ctx context.Context, t *testing.T) (drivertest.Harness, error) {
+	t.Helper()
+
 	cfg, rt, done, _ := setup.NewAWSv2Config(ctx, t, region)
 	return &harness{useV2: true, clientV2: s3v2.NewFromConfig(cfg), opts: &Options{UseLegacyList: true}, rt: rt, closer: done}, nil
 }
@@ -503,7 +511,7 @@ func TestToServerSideEncryptionType(t *testing.T) {
 		// OK, AES256 mixed case
 		{"Aes256", typesv2.ServerSideEncryptionAes256, nil},
 		// Invalid SSE type
-		{"invalid", "", fmt.Errorf("'invalid' is not a valid value for '%s'", sseTypeParamKey)},
+		{"invalid", "", fmt.Errorf("'invalid' is not a valid value for %q", sseTypeParamKey)},
 	}
 
 	for _, test := range tests {

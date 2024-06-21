@@ -61,14 +61,18 @@ type harness struct {
 }
 
 func newHarness(ctx context.Context, t *testing.T) (drivertest.Harness, error) {
+	t.Helper()
+
 	sess, _, done, state := setup.NewAWSSession(ctx, t, region)
 	drivertest.MakeUniqueStringDeterministicForTesting(state)
 	return &harness{sess: sess, closer: done}, nil
 }
 
 func (*harness) BeforeDoTypes() []interface{} {
-	return []interface{}{&dyn.BatchGetItemInput{}, &dyn.TransactWriteItemsInput{},
-		&dyn.PutItemInput{}, &dyn.DeleteItemInput{}, &dyn.UpdateItemInput{}}
+	return []interface{}{
+		&dyn.BatchGetItemInput{}, &dyn.TransactWriteItemsInput{},
+		&dyn.PutItemInput{}, &dyn.DeleteItemInput{}, &dyn.UpdateItemInput{},
+	}
 }
 
 func (*harness) BeforeQueryTypes() []interface{} {

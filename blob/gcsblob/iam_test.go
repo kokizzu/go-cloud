@@ -52,15 +52,18 @@ func TestIAMCredentialsClient(t *testing.T) {
 		wantOutput []byte
 		requestErr error
 	}{
-		{"happy path: signing", nil,
+		{
+			"happy path: signing", nil,
 			mockIAMClient{},
 			[]byte("payload"), []byte(mockSignature), nil,
 		},
-		{"won't connect", errors.New("Missing role: serviceAccountTokenCreator"),
+		{
+			"won't connect", errors.New("Missing role: serviceAccountTokenCreator"),
 			mockIAMClient{},
 			[]byte("payload"), nil, nil,
 		},
-		{"request fails", nil,
+		{
+			"request fails", nil,
 			mockIAMClient{requestErr: context.Canceled},
 			[]byte("payload"), nil, context.Canceled,
 		},
@@ -69,7 +72,7 @@ func TestIAMCredentialsClient(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			c := credentialsClient{err: test.connectErr, client: test.mockClient}
-			makeSignBytesFn := c.CreateMakeSignBytesWith(nil, serviceAccountID)
+			makeSignBytesFn := c.CreateMakeSignBytesWith(context.TODO(), serviceAccountID)
 
 			signBytesFn := makeSignBytesFn(nil) // Our mocks don't read any context.
 			haveOutput, haveErr := signBytesFn(test.input)

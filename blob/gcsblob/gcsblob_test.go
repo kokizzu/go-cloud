@@ -19,7 +19,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -67,6 +67,8 @@ type harness struct {
 }
 
 func newHarness(ctx context.Context, t *testing.T) (drivertest.Harness, error) {
+	t.Helper()
+
 	opts := &Options{GoogleAccessID: serviceAccountID}
 	if *setup.Record {
 		if *pathToPrivateKey == "" {
@@ -74,7 +76,7 @@ func newHarness(ctx context.Context, t *testing.T) (drivertest.Harness, error) {
 			*pathToPrivateKey = filepath.Join(usr.HomeDir, "Downloads", "gcs-private-key.pem")
 		}
 		// Use a real private key for signing URLs during -record.
-		pk, err := ioutil.ReadFile(*pathToPrivateKey)
+		pk, err := os.ReadFile(*pathToPrivateKey)
 		if err != nil {
 			t.Fatalf("Couldn't find private key at %v: %v", *pathToPrivateKey, err)
 		}
@@ -456,7 +458,7 @@ func TestPreconditions(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer reader.Close()
-	gotBytes, err := ioutil.ReadAll(reader)
+	gotBytes, err := io.ReadAll(reader)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -519,7 +521,7 @@ func TestURLOpenerForParams(t *testing.T) {
 
 	// Create a file for use as a dummy private key file.
 	privateKey := []byte("some content")
-	pkFile, err := ioutil.TempFile("", "my-private-key")
+	pkFile, err := os.CreateTemp("", "my-private-key")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -639,12 +641,12 @@ func TestOpenBucketFromURL(t *testing.T) {
 	cleanup := setup.FakeGCPDefaultCredentials(t)
 	defer cleanup()
 
-	pkFile, err := ioutil.TempFile("", "my-private-key")
+	pkFile, err := os.CreateTemp("", "my-private-key")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.Remove(pkFile.Name())
-	if err := ioutil.WriteFile(pkFile.Name(), []byte("key"), 0666); err != nil {
+	if err := os.WriteFile(pkFile.Name(), []byte("key"), 0o666); err != nil {
 		t.Fatal(err)
 	}
 
@@ -685,7 +687,8 @@ func TestReadDefaultCredentials(t *testing.T) {
 		WantPrivateKey []byte
 	}{
 		// Variant A: service account file
-		{`{
+		{
+			`{
 			"type": "service_account",
 			"project_id": "project-id",
 			"private_key_id": "key-id",
@@ -701,7 +704,8 @@ func TestReadDefaultCredentials(t *testing.T) {
 			[]byte("-----BEGIN PRIVATE KEY-----\nprivate-key\n-----END PRIVATE KEY-----\n"),
 		},
 		// Variant A: credentials file absent a private key (stripped)
-		{`{
+		{
+			`{
 			"google": {},
 			"client_email": "service-account-email",
 			"client_id": "client-id"
@@ -710,7 +714,8 @@ func TestReadDefaultCredentials(t *testing.T) {
 			[]byte(""),
 		},
 		// Variant B: obtained through the REST API
-		{`{
+		{
+			`{
 			"name": "projects/project-id/serviceAccounts/service-account-email/keys/key-id",
 			"privateKeyType": "TYPE_GOOGLE_CREDENTIALS_FILE",
 			"privateKeyData": "private-key",

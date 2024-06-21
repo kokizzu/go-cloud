@@ -23,7 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -208,6 +207,8 @@ func (verifyAsFailsOnNil) ListObjectCheck(o *blob.ListObject) error {
 
 // RunConformanceTests runs conformance tests for driver implementations of blob.
 func RunConformanceTests(t *testing.T, newHarness HarnessMaker, asTests []AsTest) {
+	t.Helper()
+
 	t.Run("TestNonexistentBucket", func(t *testing.T) {
 		testNonexistentBucket(t, newHarness)
 	})
@@ -274,6 +275,8 @@ func RunConformanceTests(t *testing.T, newHarness HarnessMaker, asTests []AsTest
 
 // RunBenchmarks runs benchmarks for driver implementations of blob.
 func RunBenchmarks(b *testing.B, bkt *blob.Bucket) {
+	b.Helper()
+
 	b.Run("BenchmarkRead", func(b *testing.B) {
 		benchmarkRead(b, bkt)
 	})
@@ -284,6 +287,8 @@ func RunBenchmarks(b *testing.B, bkt *blob.Bucket) {
 
 // testNonexistentBucket tests the functionality of IsAccessible.
 func testNonexistentBucket(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	ctx := context.Background()
 	h, err := newHarness(ctx, t)
 	if err != nil {
@@ -332,11 +337,15 @@ func testNonexistentBucket(t *testing.T, newHarness HarnessMaker) {
 
 // testList tests the functionality of List.
 func testList(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	const keyPrefix = "blob-for-list"
 	content := []byte("hello")
 
 	keyForIndex := func(i int) string { return fmt.Sprintf("%s-%d", keyPrefix, i) }
 	gotIndices := func(t *testing.T, objs []*driver.ListObject) []int {
+		t.Helper()
+
 		var got []int
 		for _, obj := range objs {
 			if !strings.HasPrefix(obj.Key, keyPrefix) {
@@ -408,6 +417,8 @@ func testList(t *testing.T, newHarness HarnessMaker) {
 	// from List. The very first time the test is run against a Bucket, it may be
 	// flaky due to this race.
 	init := func(t *testing.T) (driver.Bucket, func()) {
+		t.Helper()
+
 		h, err := newHarness(ctx, t)
 		if err != nil {
 			t.Fatal(err)
@@ -561,6 +572,8 @@ func testList(t *testing.T, newHarness HarnessMaker) {
 
 // testListWeirdKeys tests the functionality of List on weird keys.
 func testListWeirdKeys(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	const keyPrefix = "list-weirdkeys-"
 	content := []byte("hello")
 	ctx := context.Background()
@@ -578,6 +591,8 @@ func testListWeirdKeys(t *testing.T, newHarness HarnessMaker) {
 	// from List. The very first time the test is run against a Bucket, it may be
 	// flaky due to this race.
 	init := func(t *testing.T) (*blob.Bucket, func()) {
+		t.Helper()
+
 		h, err := newHarness(ctx, t)
 		if err != nil {
 			t.Fatal(err)
@@ -659,6 +674,8 @@ func doList(ctx context.Context, b *blob.Bucket, prefix, delim string, recurse b
 
 // testListDelimiters tests the functionality of List using Delimiters.
 func testListDelimiters(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	const keyPrefix = "blob-for-delimiters-"
 	content := []byte("hello")
 
@@ -877,6 +894,8 @@ func testListDelimiters(t *testing.T, newHarness HarnessMaker) {
 	// from List. The very first time the test is run against a Bucket, it may be
 	// flaky due to this race.
 	init := func(t *testing.T, delim string) (driver.Bucket, *blob.Bucket, func()) {
+		t.Helper()
+
 		h, err := newHarness(ctx, t)
 		if err != nil {
 			t.Fatal(err)
@@ -983,6 +1002,8 @@ func testListDelimiters(t *testing.T, newHarness HarnessMaker) {
 // less than the delimiter.
 // See https://github.com/google/go-cloud/issues/3089.
 func testDirsWithCharactersBeforeDelimiter(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	const keyPrefix = "blob-for-dirs-with-chars-before-delimiter/"
 	content := []byte("hello")
 
@@ -1059,6 +1080,8 @@ func testDirsWithCharactersBeforeDelimiter(t *testing.T, newHarness HarnessMaker
 }
 
 func iterToSetOfKeys(ctx context.Context, t *testing.T, iter *blob.ListIterator) map[string]bool {
+	t.Helper()
+
 	retval := map[string]bool{}
 	for {
 		if item, err := iter.Next(ctx); err == io.EOF {
@@ -1074,6 +1097,8 @@ func iterToSetOfKeys(ctx context.Context, t *testing.T, iter *blob.ListIterator)
 
 // testRead tests the functionality of NewReader, NewRangeReader, and Reader.
 func testRead(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	const key = "blob-for-reading"
 	content := []byte("abcdefghijklmnopqurstuvwxyz")
 	contentSize := int64(len(content))
@@ -1144,6 +1169,8 @@ func testRead(t *testing.T, newHarness HarnessMaker) {
 
 	// Creates a blob for sub-tests below.
 	init := func(t *testing.T, skipCreate bool) (*blob.Bucket, func()) {
+		t.Helper()
+
 		h, err := newHarness(ctx, t)
 		if err != nil {
 			t.Fatal(err)
@@ -1219,6 +1246,8 @@ func testRead(t *testing.T, newHarness HarnessMaker) {
 
 // testAttributes tests Attributes.
 func testAttributes(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	const (
 		dirKey             = "someDir"
 		key                = dirKey + "/blob-for-attributes"
@@ -1234,6 +1263,8 @@ func testAttributes(t *testing.T, newHarness HarnessMaker) {
 
 	// Creates a blob for sub-tests below.
 	init := func(t *testing.T) (*blob.Bucket, func()) {
+		t.Helper()
+
 		h, err := newHarness(ctx, t)
 		if err != nil {
 			t.Fatal(err)
@@ -1349,16 +1380,20 @@ func testAttributes(t *testing.T, newHarness HarnessMaker) {
 }
 
 // loadTestData loads test data, inlined using go-bindata.
-func loadTestData(t testing.TB, name string) []byte {
+func loadTestData(tb testing.TB, name string) []byte {
+	tb.Helper()
+
 	data, err := Asset(name)
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 	return data
 }
 
 // testWrite tests the functionality of NewWriter and Writer.
 func testWrite(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	const key = "blob-for-reading"
 	const existingContent = "existing content"
 	smallText := loadTestData(t, "test-small.txt")
@@ -1577,6 +1612,8 @@ func testWrite(t *testing.T, newHarness HarnessMaker) {
 
 // testCanceledWrite tests the functionality of canceling an in-progress write.
 func testCanceledWrite(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	const key = "blob-for-canceled-write"
 	content := []byte("hello world")
 	cancelContent := []byte("going to cancel")
@@ -1690,6 +1727,8 @@ func testCanceledWrite(t *testing.T, newHarness HarnessMaker) {
 
 // testMetadata tests writing and reading the key/value metadata for a blob.
 func testMetadata(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	const key = "blob-for-metadata"
 	hello := []byte("hello")
 
@@ -1813,6 +1852,8 @@ func testMetadata(t *testing.T, newHarness HarnessMaker) {
 
 // testMD5 tests reading MD5 hashes via List and Attributes.
 func testMD5(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	ctx := context.Background()
 
 	// Define two blobs with different content; we'll write them and then verify
@@ -1889,6 +1930,8 @@ func testMD5(t *testing.T, newHarness HarnessMaker) {
 
 // testCopy tests the functionality of Copy.
 func testCopy(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	const (
 		srcKey             = "blob-for-copying-src"
 		dstKey             = "blob-for-copying-dest"
@@ -1899,7 +1942,7 @@ func testCopy(t *testing.T, newHarness HarnessMaker) {
 		contentEncoding    = "identity"
 		contentLanguage    = "en"
 	)
-	var contents = []byte("Hello World")
+	contents := []byte("Hello World")
 
 	ctx := context.Background()
 	t.Run("NonExistentSourceFails", func(t *testing.T) {
@@ -2019,6 +2062,8 @@ func testCopy(t *testing.T, newHarness HarnessMaker) {
 
 // testDelete tests the functionality of Delete.
 func testDelete(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	const key = "blob-for-deleting"
 
 	ctx := context.Background()
@@ -2090,6 +2135,8 @@ func testDelete(t *testing.T, newHarness HarnessMaker) {
 // testConcurrentWriteAndRead tests that concurrent writing to multiple blob
 // keys and concurrent reading from multiple blob keys works.
 func testConcurrentWriteAndRead(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	ctx := context.Background()
 	h, err := newHarness(ctx, t)
 	if err != nil {
@@ -2123,12 +2170,14 @@ func testConcurrentWriteAndRead(t *testing.T, newHarness HarnessMaker) {
 
 	var wg sync.WaitGroup
 
+	errs := make(chan error, numKeys)
+
 	// Write all blobs concurrently.
 	for k := 0; k < numKeys; k++ {
 		wg.Add(1)
 		go func(key int) {
 			if err := b.WriteAll(ctx, blobName(key), keyData[key], nil); err != nil {
-				t.Fatal(err)
+				errs <- fmt.Errorf("WriteAll key=%v: %w", key, err)
 			}
 			wg.Done()
 		}(k)
@@ -2136,27 +2185,42 @@ func testConcurrentWriteAndRead(t *testing.T, newHarness HarnessMaker) {
 	}
 	wg.Wait()
 
+	close(errs)
+
+	for err := range errs {
+		t.Fatalf("got error from concurrent blob write: %v", err)
+	}
+
+	errs = make(chan error, numKeys)
+
 	// Read all blobs concurrently and verify that they contain the expected data.
 	for k := 0; k < numKeys; k++ {
 		wg.Add(1)
 		go func(key int) {
 			buf, err := b.ReadAll(ctx, blobName(key))
 			if err != nil {
-				t.Fatal(err)
-			}
-			if !bytes.Equal(buf, keyData[key]) {
-				t.Errorf("read data mismatch for key %d", key)
+				errs <- err
+			} else if !bytes.Equal(buf, keyData[key]) {
+				errs <- fmt.Errorf("read data mismatch for key %d", key)
 			}
 			wg.Done()
 		}(k)
 	}
 	wg.Wait()
+
+	close(errs)
+
+	for err := range errs {
+		t.Fatalf("got error from concurrent blob write: %v", err)
+	}
 }
 
 // testUploadDownload tests that Upload and Download work. For many drivers,
 // these are implemented in the concrete type, but drivers that implement Reader.Download
 // and/or Writer.Upload will have those called directly.
 func testUploadDownload(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	const key = "blob-for-upload-download"
 	const contents = "up and down"
 	ctx := context.Background()
@@ -2191,6 +2255,8 @@ func testUploadDownload(t *testing.T, newHarness HarnessMaker) {
 
 // testKeys tests a variety of weird keys.
 func testKeys(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	const keyPrefix = "weird-keys"
 	content := []byte("hello")
 	ctx := context.Background()
@@ -2275,7 +2341,7 @@ func testKeys(t *testing.T, newHarness HarnessMaker) {
 				if resp.StatusCode != 200 {
 					t.Errorf("got status code %d, want 200", resp.StatusCode)
 				}
-				got, err := ioutil.ReadAll(resp.Body)
+				got, err := io.ReadAll(resp.Body)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -2305,13 +2371,14 @@ func testKeys(t *testing.T, newHarness HarnessMaker) {
 					t.Errorf("copied got %q want %q", string(got), string(content))
 				}
 			}
-
 		})
 	}
 }
 
 // testSignedURL tests the functionality of SignedURL.
 func testSignedURL(t *testing.T, newHarness HarnessMaker) {
+	t.Helper()
+
 	const key = "blob-for-signing"
 	const contents = "hello world"
 
@@ -2463,7 +2530,7 @@ func testSignedURL(t *testing.T, newHarness HarnessMaker) {
 			success := resp.StatusCode >= 200 && resp.StatusCode < 300
 			if success != test.wantSuccess {
 				t.Errorf("PUT to %q with ContentType %q got status code %d, wanted 2xx? %v", test.urlDescription, test.contentType, resp.StatusCode, test.wantSuccess)
-				gotBody, _ := ioutil.ReadAll(resp.Body)
+				gotBody, _ := io.ReadAll(resp.Body)
 				t.Errorf(string(gotBody))
 			}
 		}
@@ -2487,10 +2554,10 @@ func testSignedURL(t *testing.T, newHarness HarnessMaker) {
 			success := resp.StatusCode >= 200 && resp.StatusCode < 300
 			if success != test.wantSuccess {
 				t.Errorf("GET to %q got status code %d, want 2xx? %v", test.urlDescription, resp.StatusCode, test.wantSuccess)
-				gotBody, _ := ioutil.ReadAll(resp.Body)
+				gotBody, _ := io.ReadAll(resp.Body)
 				t.Errorf(string(gotBody))
 			} else if success {
-				gotBody, err := ioutil.ReadAll(resp.Body)
+				gotBody, err := io.ReadAll(resp.Body)
 				if err != nil {
 					t.Errorf("GET to %q failed to read response body: %v", test.urlDescription, err)
 				} else if gotBodyStr := string(gotBody); gotBodyStr != contents {
@@ -2519,7 +2586,7 @@ func testSignedURL(t *testing.T, newHarness HarnessMaker) {
 			defer resp.Body.Close()
 			success := resp.StatusCode >= 200 && resp.StatusCode < 300
 			if success != test.wantSuccess {
-				gotBody, _ := ioutil.ReadAll(resp.Body)
+				gotBody, _ := io.ReadAll(resp.Body)
 				t.Errorf(string(gotBody))
 				t.Fatalf("DELETE to %q got status code %d, want 2xx? %v", test.urlDescription, resp.StatusCode, test.wantSuccess)
 			}
@@ -2534,7 +2601,7 @@ func testSignedURL(t *testing.T, newHarness HarnessMaker) {
 			defer resp.Body.Close()
 			if resp.StatusCode != 404 {
 				t.Errorf("GET after DELETE got status code %d, want 404", resp.StatusCode)
-				gotBody, _ := ioutil.ReadAll(resp.Body)
+				gotBody, _ := io.ReadAll(resp.Body)
 				t.Errorf(string(gotBody))
 			}
 		}
@@ -2543,12 +2610,14 @@ func testSignedURL(t *testing.T, newHarness HarnessMaker) {
 
 // testAs tests the various As functions, using AsTest.
 func testAs(t *testing.T, newHarness HarnessMaker, st AsTest) {
+	t.Helper()
+
 	const (
 		dir     = "mydir"
 		key     = dir + "/as-test"
 		copyKey = dir + "/as-test-copy"
 	)
-	var content = []byte("hello world")
+	content := []byte("hello world")
 	ctx := context.Background()
 
 	h, err := newHarness(ctx, t)
@@ -2658,6 +2727,8 @@ func testAs(t *testing.T, newHarness HarnessMaker, st AsTest) {
 }
 
 func benchmarkRead(b *testing.B, bkt *blob.Bucket) {
+	b.Helper()
+
 	ctx := context.Background()
 	const key = "readbenchmark-blob"
 
@@ -2693,6 +2764,8 @@ func benchmarkRead(b *testing.B, bkt *blob.Bucket) {
 }
 
 func benchmarkWriteReadDelete(b *testing.B, bkt *blob.Bucket) {
+	b.Helper()
+
 	ctx := context.Background()
 	const baseKey = "writereaddeletebenchmark-blob-"
 

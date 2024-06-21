@@ -152,7 +152,14 @@ func (ch *fakeChannel) QueueDeclareAndBind(queueName, exchangeName string) error
 	return nil
 }
 
-func (ch *fakeChannel) Publish(exchangeName string, pub amqp.Publishing) error {
+func (ch *fakeChannel) Publish(exchangeName, routingKey string, pub amqp.Publishing) error {
+	return ch.PublishWithContext(context.Background(), exchangeName, routingKey, pub)
+}
+
+func (ch *fakeChannel) PublishWithContext(ctx context.Context,
+	exchangeName, routingKey string,
+	pub amqp.Publishing,
+) error {
 	if ch.isClosed() {
 		return amqp.ErrClosed
 	}
@@ -168,9 +175,10 @@ func (ch *fakeChannel) Publish(exchangeName string, pub amqp.Publishing) error {
 		// The message is unroutable. Send a Return to all channels registered with
 		// NotifyReturn.
 		ret := amqp.Return{
-			Exchange:  exchangeName,
-			ReplyCode: amqp.NoRoute,
-			ReplyText: "NO_ROUTE: no queues bound to exchange",
+			Exchange:   exchangeName,
+			ReplyCode:  amqp.NoRoute,
+			ReplyText:  "NO_ROUTE: no queues bound to exchange",
+			RoutingKey: routingKey,
 		}
 		for _, c := range ch.returnChans {
 			select {

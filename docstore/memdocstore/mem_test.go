@@ -16,7 +16,6 @@ package memdocstore
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -30,6 +29,8 @@ import (
 type harness struct{}
 
 func newHarness(ctx context.Context, t *testing.T) (drivertest.Harness, error) {
+	t.Helper()
+
 	return &harness{}, nil
 }
 
@@ -164,12 +165,7 @@ func TestSortDocs(t *testing.T) {
 }
 
 func TestSaveAndLoad(t *testing.T) {
-	// Save and then load into a file.
-	dir, err := ioutil.TempDir("", t.Name())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	// Load from nonexistent file should return empty data.
 	f := filepath.Join(dir, "saveAndLoad")

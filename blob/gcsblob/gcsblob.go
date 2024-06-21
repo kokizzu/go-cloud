@@ -63,7 +63,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -248,7 +247,7 @@ func (o *URLOpener) forParams(ctx context.Context, q url.Values) (*Options, *gcp
 		}
 	}
 	if keyPath := q.Get("private_key_path"); keyPath != "" {
-		pk, err := ioutil.ReadFile(keyPath)
+		pk, err := os.ReadFile(keyPath)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -345,7 +344,7 @@ type bucket struct {
 	opts   *Options
 }
 
-var emptyBody = ioutil.NopCloser(strings.NewReader(""))
+var emptyBody = io.NopCloser(strings.NewReader(""))
 
 // reader reads a GCS object. It implements driver.Reader.
 type reader struct {
@@ -609,7 +608,7 @@ func unescapeKey(key string) string {
 }
 
 // NewTypedWriter implements driver.NewTypedWriter.
-func (b *bucket) NewTypedWriter(ctx context.Context, key string, contentType string, opts *driver.WriterOptions) (driver.Writer, error) {
+func (b *bucket) NewTypedWriter(ctx context.Context, key, contentType string, opts *driver.WriterOptions) (driver.Writer, error) {
 	key = escapeKey(key)
 	bkt := b.client.Bucket(b.name)
 	obj := bkt.Object(key)
