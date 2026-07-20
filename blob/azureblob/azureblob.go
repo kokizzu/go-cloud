@@ -49,8 +49,9 @@
 // AZURE_STORAGE_PROTOCOL, AZURE_STORAGE_IS_CDN, and AZURE_STORAGE_IS_LOCAL_EMULATOR
 // can be used to configure how the default URLOpener generates the Azure
 // Service URL via ServiceURLOptions. These can all be configured via URL
-// parameters as well. See ServiceURLOptions and NewDefaultServiceURL
-// for more details.
+// parameters as well. See ServiceURLOptions and NewDefaultServiceURL for more
+// details. When AZURE_STORAGE_SAS_TOKEN is set, bucket URLs cannot change the
+// service endpoint; use the environment variables above instead.
 //
 // To customize the URL opener, or for more details on the URL format,
 // see URLOpener.
@@ -319,7 +320,42 @@ func (o *lazyOpener) OpenBucketURL(ctx context.Context, u *url.URL) (*blob.Bucke
 			ServiceURLOptions: *opts,
 		}
 	})
+	// The SAS token is part of the service URL, so URL parameters must not send
+	// it to another origin.
+	if o.opener.ServiceURLOptions.SASToken != "" {
+		defaultURL, err := NewServiceURL(&o.opener.ServiceURLOptions)
+		if err != nil {
+			return nil, err
+		}
+		opts, err := o.opener.ServiceURLOptions.withOverrides(u.Query())
+		if err != nil {
+			return nil, err
+		}
+		overriddenURL, err := NewServiceURL(opts)
+		if err != nil {
+			return nil, err
+		}
+		same, err := sameServiceOrigin(defaultURL, overriddenURL)
+		if err != nil {
+			return nil, err
+		}
+		if !same {
+			return nil, errors.New("azureblob: bucket URL cannot change the service endpoint when AZURE_STORAGE_SAS_TOKEN is set")
+		}
+	}
 	return o.opener.OpenBucketURL(ctx, u)
+}
+
+func sameServiceOrigin(a, b ServiceURL) (bool, error) {
+	aURL, err := url.Parse(string(a))
+	if err != nil {
+		return false, err
+	}
+	bURL, err := url.Parse(string(b))
+	if err != nil {
+		return false, err
+	}
+	return strings.EqualFold(aURL.Scheme, bURL.Scheme) && strings.EqualFold(aURL.Host, bURL.Host), nil
 }
 
 type credTypeEnumT int

@@ -686,3 +686,57 @@ func TestOpenBucketFromURL(t *testing.T) {
 		}
 	}
 }
+
+func TestLazyOpenerRejectsSASEndpointOverrides(t *testing.T) {
+	t.Setenv("AZURE_STORAGE_ACCOUNT", "my-account")
+	t.Setenv("AZURE_STORAGE_SAS_TOKEN", "sig=secret")
+
+	for _, tc := range []struct {
+		name    string
+		rawURL  string
+		wantErr bool
+	}{
+		{"default", "azblob://mybucket", false},
+		{"same domain", "azblob://mybucket?domain=blob.core.windows.net", false},
+		{"same protocol", "azblob://mybucket?protocol=https", false},
+		{"domain", "azblob://mybucket?domain=storage.example.com", true},
+		{"protocol", "azblob://mybucket?protocol=http", true},
+		{"storage account", "azblob://mybucket?storage_account=other-account", true},
+		{"cdn", "azblob://mybucket?cdn=true", true},
+		{"local emulator", "azblob://mybucket?localemu=true", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			u, err := url.Parse(tc.rawURL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			b, err := new(lazyOpener).OpenBucketURL(context.Background(), u)
+			if b != nil {
+				defer func() { _ = b.Close() }()
+			}
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("got error %v, want error %v", err, tc.wantErr)
+			}
+			if err != nil && !strings.Contains(err.Error(), "cannot change the service endpoint") {
+				t.Fatalf("got error %q, want endpoint override error", err)
+			}
+		})
+	}
+}
+
+func TestLazyOpenerAllowsSASConfiguredEndpoint(t *testing.T) {
+	t.Setenv("AZURE_STORAGE_ACCOUNT", "my-account")
+	t.Setenv("AZURE_STORAGE_SAS_TOKEN", "sig=secret")
+	t.Setenv("AZURE_STORAGE_DOMAIN", "storage.example.com")
+	t.Setenv("AZURE_STORAGE_PROTOCOL", "http")
+
+	u, err := url.Parse("azblob://mybucket")
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := new(lazyOpener).OpenBucketURL(context.Background(), u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = b.Close() }()
+}
